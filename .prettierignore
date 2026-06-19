@@ -1,0 +1,15 @@
+.next
+out
+build
+node_modules
+drizzle
+package-lock.json
+pnpm-lock.yaml
+*.lock
+next-env.d.ts
+
+# Project meta / agent files — keep authored content untouched.
+curator-spec.md
+AGENTS.md
+CLAUDE.md
+.claude

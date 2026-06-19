@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: curator-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: curator
+      POSTGRES_PASSWORD: curator
+      POSTGRES_DB: curator
+    ports:
+      - "5432:5432"
+    volumes:
+      - curator-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U curator -d curator"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: curator-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - curator-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  curator-postgres-data:
+  curator-redis-data:
