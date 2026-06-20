@@ -17,6 +17,9 @@ function parseRedisUrl(urlString: string): ConnectionOptions {
     host: url.hostname,
     port: url.port ? Number(url.port) : 6379,
     maxRetriesPerRequest: null,
+    // Defer the actual TCP connection until the first command so importing the
+    // queue (e.g. during `next build`) never tries to reach Redis.
+    lazyConnect: true,
   };
 
   if (url.username) options.username = decodeURIComponent(url.username);
