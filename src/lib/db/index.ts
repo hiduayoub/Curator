@@ -1,7 +1,9 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { env } from "@/env";
+// Relative import (not the `@/` alias) so the standalone BullMQ worker can run
+// this module under tsx without TS path-alias resolution.
+import { env } from "../../env";
 import * as schema from "./schema";
 
 /**

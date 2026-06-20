@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "worker": "node --env-file-if-exists=.env --import tsx src/worker/index.ts",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
@@ -17,6 +18,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "bullmq": "^5.79.0",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.9",
     "postgres": "^3.4.9",
@@ -36,6 +38,7 @@
     "prettier": "^3.8.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }
