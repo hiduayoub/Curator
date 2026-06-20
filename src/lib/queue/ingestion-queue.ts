@@ -9,31 +9,39 @@ import {
 } from "./types";
 
 /**
- * The ingestion queue. Producers (the `POST /api/save` route in Phase 4) push
- * jobs here and return immediately; the worker drains them asynchronously.
+ * Lazily-constructed ingestion queue.
  *
- * Cached on `globalThis` so Next.js hot-reloads in development don't open a new
- * Redis connection on every change.
+ * Built on first use (not at import) so merely importing this module — e.g.
+ * when Next.js analyses the route during `next build` — never opens a Redis
+ * connection. Cached on `globalThis` so dev hot-reloads reuse one connection.
  */
 const globalForQueue = globalThis as unknown as {
   __curatorIngestionQueue?: Queue<IngestionJobData, IngestionJobResult>;
 };
 
-export const ingestionQueue =
-  globalForQueue.__curatorIngestionQueue ??
-  new Queue<IngestionJobData, IngestionJobResult>(INGESTION_QUEUE_NAME, {
-    connection: redisConnection,
-    defaultJobOptions: {
-      // Retry transient failures (rate limits, flaky fetches) with backoff.
-      attempts: 5,
-      backoff: { type: "exponential", delay: 2_000 },
-      removeOnComplete: { age: 3_600, count: 1_000 },
-      removeOnFail: { age: 24 * 3_600 },
-    },
-  });
+export function getIngestionQueue(): Queue<
+  IngestionJobData,
+  IngestionJobResult
+> {
+  const existing = globalForQueue.__curatorIngestionQueue;
+  if (existing) return existing;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForQueue.__curatorIngestionQueue = ingestionQueue;
+  const queue = new Queue<IngestionJobData, IngestionJobResult>(
+    INGESTION_QUEUE_NAME,
+    {
+      connection: redisConnection,
+      defaultJobOptions: {
+        // Retry transient failures (rate limits, flaky fetches) with backoff.
+        attempts: 5,
+        backoff: { type: "exponential", delay: 2_000 },
+        removeOnComplete: { age: 3_600, count: 1_000 },
+        removeOnFail: { age: 24 * 3_600 },
+      },
+    },
+  );
+
+  globalForQueue.__curatorIngestionQueue = queue;
+  return queue;
 }
 
 /**
@@ -43,7 +51,7 @@ if (process.env.NODE_ENV !== "production") {
  * twice concurrently (idempotent enqueue).
  */
 export function enqueueIngestion(data: IngestionJobData) {
-  return ingestionQueue.add(INGESTION_JOB_NAME, data, {
+  return getIngestionQueue().add(INGESTION_JOB_NAME, data, {
     jobId: data.savedItemId,
   });
 }

@@ -33,6 +33,9 @@ const eslintConfig = defineConfig([
       ],
       "@typescript-eslint/no-non-null-assertion": "error",
       eqeqeq: ["error", "always", { null: "ignore" }],
+      // External preview thumbnails use a plain <img>; next/image would require
+      // remote-pattern config for every social CDN.
+      "@next/next/no-img-element": "off",
     },
   },
 

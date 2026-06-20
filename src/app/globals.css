@@ -1,26 +1,215 @@
 @import "tailwindcss";
 
+/*
+ * Curator design tokens.
+ *
+ * Direction: pristine, hyper-minimalist (Apple/Google register). Hierarchy is
+ * carried by spacing and type, not borders or color. Color appears only as a
+ * single restrained accent and as tiny per-platform dots.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --surface-hover: #fafafa;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --text: #08080a;
+  --text-secondary: #5f5f66;
+  --text-tertiary: #9b9ba3;
+
+  --hairline: rgba(8, 8, 10, 0.07);
+  --hairline-strong: rgba(8, 8, 10, 0.12);
+
+  --accent: #0066ff;
+  --accent-soft: rgba(0, 102, 255, 0.1);
+
+  --shadow-card: 0 1px 2px rgba(8, 8, 10, 0.04), 0 1px 1px rgba(8, 8, 10, 0.03);
+  --shadow-lift:
+    0 8px 30px rgba(8, 8, 10, 0.08), 0 2px 6px rgba(8, 8, 10, 0.04);
+  --shadow-overlay:
+    0 24px 70px rgba(8, 8, 10, 0.22), 0 8px 22px rgba(8, 8, 10, 0.14);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #060607;
+    --surface: #111113;
+    --surface-hover: #17171a;
+
+    --text: #f4f4f6;
+    --text-secondary: #a0a0a8;
+    --text-tertiary: #67676f;
+
+    --hairline: rgba(255, 255, 255, 0.08);
+    --hairline-strong: rgba(255, 255, 255, 0.14);
+
+    --accent: #3b91ff;
+    --accent-soft: rgba(59, 145, 255, 0.14);
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-lift: 0 10px 36px rgba(0, 0, 0, 0.5);
+    --shadow-overlay: 0 28px 80px rgba(0, 0, 0, 0.6);
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+* {
+  border-color: var(--hairline);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv01", "ss01";
+}
+
+/* Quiet, consistent focus ring — keyboard-first by design. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* Thin, unobtrusive scrollbars. */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--hairline-strong);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+    background-clip: content-box;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Motion — used sparingly: hydration crossfade + palette spotlight.  */
+/* ------------------------------------------------------------------ */
+
+@keyframes curator-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes curator-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes curator-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes curator-palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-card-in {
+  animation: curator-fade-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--hairline) 50%,
+    transparent
+  );
+  animation: curator-shimmer 1.6s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Command palette (cmdk) — the signature spotlight surface.          */
+/* ------------------------------------------------------------------ */
+
+[cmdk-overlay] {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.32);
+  backdrop-filter: blur(4px);
+  animation: curator-overlay-in 0.18s ease both;
+}
+
+[cmdk-dialog] {
+  position: fixed;
+  top: clamp(64px, 14vh, 160px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, calc(100vw - 32px));
+  animation: curator-palette-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+[cmdk-group-heading] {
+  padding: 14px 14px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+[cmdk-group]:not([hidden]) ~ [cmdk-group]:not([hidden]) [cmdk-group-heading] {
+  border-top: 1px solid var(--hairline);
+  margin-top: 4px;
 }
